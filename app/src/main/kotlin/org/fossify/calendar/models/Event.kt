@@ -74,7 +74,8 @@ data class Event(
     }
 
     fun addIntervalTime(original: Event) {
-        val oldStart = Formatter.getDateTimeFromTS(startTS)
+        val zone = DateTimeZone.forID(getTimeZoneString())
+        val oldStart = Formatter.getDateTimeFromTS(startTS, zone)
         val newStart = when (repeatInterval) {
             DAY -> oldStart.plusDays(1)
             else -> {
@@ -130,7 +131,7 @@ data class Event(
             return newDateTime
         }
 
-        while (newDateTime.dayOfMonth().maximumValue < Formatter.getDateTimeFromTS(original.startTS)
+        while (newDateTime.dayOfMonth().maximumValue < Formatter.getDateTimeFromTS(original.startTS, currStart.zone)
                 .dayOfMonth().maximumValue
         ) {
             newDateTime = newDateTime.plusMonths(repeatInterval / MONTH)
@@ -157,7 +158,7 @@ data class Event(
 
         // check if it should be for example Fourth Monday, or Last Monday
         if (forceLastWeekday && (order == 3 || order == 4)) {
-            val originalDateTime = Formatter.getDateTimeFromTS(original.startTS)
+            val originalDateTime = Formatter.getDateTimeFromTS(original.startTS, currStart.zone)
             val isLastWeekday =
                 originalDateTime.monthOfYear != originalDateTime.plusDays(7).monthOfYear
             if (isLastWeekday)
@@ -222,10 +223,11 @@ data class Event(
         if (repeatInterval == WEEK) {
             return true // optimization for events that repeat every week
         }
-        val initialDate = Formatter.getDateFromTS(startTimes[id!!]!!)
+        val zone = DateTimeZone.forID(getTimeZoneString())
+        val initialDate = Formatter.getDateFromTS(startTimes[id!!]!!, zone)
         val daysSinceWeekStart = Math.floorMod(initialDate.dayOfWeek - DateTimeConstants.MONDAY, 7)
         val initialWeekStart = initialDate.minusDays(daysSinceWeekStart)
-        val currentDate = Formatter.getDateFromTS(startTS)
+        val currentDate = Formatter.getDateFromTS(startTS, zone)
         val weeks = Weeks.weeksBetween(initialWeekStart, currentDate).weeks
         return weeks % (repeatInterval / WEEK) == 0
     }

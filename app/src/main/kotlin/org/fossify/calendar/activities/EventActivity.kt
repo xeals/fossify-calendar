@@ -618,9 +618,9 @@ class EventActivity : SimpleActivity() {
                 0
             } else {
                 val original = mOriginalTimeZone.ifEmpty { DateTimeZone.getDefault().id }
-                val millis = System.currentTimeMillis()
-                val newOffset = DateTimeZone.forID(mEvent.getTimeZoneString()).getOffset(millis)
-                val oldOffset = DateTimeZone.forID(original).getOffset(millis)
+                val eventMillis = mEventStartDateTime.millis
+                val newOffset = DateTimeZone.forID(mEvent.getTimeZoneString()).getOffset(eventMillis)
+                val oldOffset = DateTimeZone.forID(original).getOffset(eventMillis)
                 (newOffset - oldOffset) / 1000L
             }
 

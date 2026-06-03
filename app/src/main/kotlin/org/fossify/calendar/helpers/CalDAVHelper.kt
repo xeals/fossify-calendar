@@ -260,7 +260,15 @@ class CalDAVHelper(val context: Context) {
                 ?: cursor.getStringValue(Events.CALENDAR_TIME_ZONE) ?: DateTimeZone.getDefault().id
 
             val source = "$CALDAV-$calendarId"
-            val repeatRule = Parser().parseRepeatInterval(rrule, startTS)
+            val repeatRule = Parser().parseRepeatInterval(
+                fullString = rrule,
+                startTS = startTS,
+                timeZone = try {
+                    DateTimeZone.forID(eventTimeZone)
+                } catch (e: IllegalArgumentException) {
+                    DateTimeZone.getDefault()
+                }
+            )
             val event = Event(
                 id = null,
                 startTS = startTS,
@@ -353,12 +361,12 @@ class CalDAVHelper(val context: Context) {
                     val dates = line.split(",", ";")
                     dates.filter { it.isNotEmpty() && it[0].isDigit() }.forEach {
                         if (it.endsWith("Z")) {
-                            // convert for example "20190216T230000Z" to "20190217000000" in Slovakia in a weird way
+                            // exdate is a UTC instant (e.g. "20190216T230000Z"); derive the local day-code
+                            // using the default-zone offset at *that* instant, not "now"
                             val formatter = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'")
-                            val offset =
-                                DateTimeZone.getDefault().getOffset(System.currentTimeMillis())
-                            val dt = formatter.parseDateTime(it).plusMillis(offset)
-                            val dayCode = Formatter.getDayCodeFromDateTime(dt)
+                                .withZone(DateTimeZone.UTC)
+                            val dt = formatter.parseDateTime(it)
+                            val dayCode = Formatter.getDayCodeFromTS(dt.millis / 1000L)
                             event.addRepetitionException(dayCode)
                         } else {
                             val potentialTS = it.substring(0, 8)

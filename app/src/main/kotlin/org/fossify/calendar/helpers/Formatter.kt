@@ -100,7 +100,7 @@ object Formatter {
 
     fun getDayCodeFromDateTime(dateTime: DateTime) = dateTime.toString(DAYCODE_PATTERN)
 
-    fun getDateFromTS(ts: Long) = LocalDate(ts * 1000L, DateTimeZone.getDefault())
+    fun getDateFromTS(ts: Long, tz: DateTimeZone = DateTimeZone.getDefault()) = LocalDate(ts * 1000L, tz)
 
     fun getDateTimeFromTS(ts: Long, tz: DateTimeZone = DateTimeZone.getDefault()) = DateTime(ts * 1000L, tz)
 
